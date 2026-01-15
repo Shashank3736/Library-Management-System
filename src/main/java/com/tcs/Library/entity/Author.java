@@ -18,12 +18,12 @@ import lombok.Setter;
 public class Author {
     @jakarta.persistence.Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="author_id")
+    @Column(name = "author_id")
     private Long Id;
-    @Column(name="author_name")
+    @Column(name = "author_name")
     private String name;
-    @Column(name="email",unique = true)
+    @Column(name = "email", unique = true)
     private String email;
-    @ManyToMany(mappedBy = "author")
-    private List<Book>book;
+    @ManyToMany(mappedBy = "authors")
+    private List<Book> book;
 }

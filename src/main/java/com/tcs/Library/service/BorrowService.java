@@ -1,78 +1,159 @@
 package com.tcs.Library.service;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-
-import com.tcs.Library.entity.Book;
-import com.tcs.Library.entity.BookCopy;
-import com.tcs.Library.entity.User;
+import com.tcs.Library.dto.IssueBookRequest;
+import com.tcs.Library.entity.*;
 import com.tcs.Library.enums.BookStatus;
-import com.tcs.Library.error.BookNotFoundException;
-import com.tcs.Library.error.NoUserFoundException;
-import com.tcs.Library.error.SameBookException;
-import com.tcs.Library.error.UserDefaulterException;
-import com.tcs.Library.repository.BookCopyRepo;
-import com.tcs.Library.repository.BookRepo;
-import com.tcs.Library.repository.UserRepo;
-
-import jakarta.transaction.Transactional;
-
+import com.tcs.Library.error.*;
+import com.tcs.Library.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BorrowService {
 
-    private final UserRepo userRepo;
     private final BookRepo bookRepo;
+    private final UserRepo userRepo;
     private final BookCopyRepo bookCopyRepo;
+    private final IssuedBooksRepo issuedBooksRepo;
+    private final FineRepo fineRepo;
+
+    private static final int LOAN_PERIOD_DAYS = 14;
+    private static final BigDecimal FINE_PER_DAY = new BigDecimal("10.00");
+    private static final BigDecimal DEFAULTER_FINE_THRESHOLD = new BigDecimal("100.00");
+    private static final int DEFAULTER_OVERDUE_DAYS = 30;
 
     @Transactional
-    public com.tcs.Library.dto.IssueBookResponseDTO issueBook(String bookPubId, Long usrId, String usrPubId)
-            throws SameBookException {
+    public IssuedBooks issueBook(IssueBookRequest request) {
+        // 1. Get User
+        User user = userRepo.findByPublicId(request.getUserPublicId())
+                .orElseThrow(() -> new NoUserFoundException("User not found: " + request.getUserPublicId()));
 
-        Book book = bookRepo.findByPublicId(bookPubId)
-                .orElseThrow(() -> new BookNotFoundException(bookPubId));
-        User user = userRepo.findById(usrId)
-                .orElseThrow(() -> new NoUserFoundException(usrPubId));
+        // 2. Check if user is a defaulter
         if (user.isDefaulter()) {
-            throw new UserDefaulterException("User is a defaulter");
+            throw new UserIsDefaulterException(
+                    "User is a defaulter and cannot borrow books. Please pay pending fines.");
         }
-        for (BookCopy bc : user.getBookCopy()) {
-            if (bc.getReturnTime() != null &&
-                    LocalDateTime.now().isAfter(bc.getReturnTime()) || bc.getStatus().equals(BookStatus.OVERDUE)) {
-                user.setDefaulter(true);
-                userRepo.save(user);
-                throw new UserDefaulterException(user.getPublicId().toString());
-            }
-            String currentBookPubId = bc.getCopypubId().split("_")[0];
-            if (currentBookPubId.equals(bookPubId)) {
-                throw new SameBookException(bookPubId);
-            }
-        }
-        BookCopy availableCopy = bookCopyRepo
-                .findFirstByBookAndStatusIn(book, List.of(BookStatus.RETURNED, BookStatus.FIRST))
-                .orElseThrow(() -> new RuntimeException("No available copies for book: " + bookPubId));
 
+        // 3. Check if user has unpaid fines
+        if (user.getTotalUnpaidFine().compareTo(BigDecimal.ZERO) > 0) {
+            throw new UserIsDefaulterException(
+                    "User has unpaid fines of ₹" + user.getTotalUnpaidFine() + ". Please clear dues before borrowing.");
+        }
+
+        // 4. Get Book
+        Book book = bookRepo.findByPublicId(request.getBookPublicId())
+                .orElseThrow(() -> new BookNotFoundException("Book not found: " + request.getBookPublicId()));
+
+        // 5. Check unique book constraint - user cannot borrow same book type twice
+        boolean alreadyBorrowed = issuedBooksRepo.existsActiveBorrowByUserAndBook(user.getId(), book.getId());
+        if (alreadyBorrowed) {
+            throw new DuplicateBookBorrowException(
+                    "User already has an active borrow for book: " + book.getBookTitle());
+        }
+
+        // 6. Find available copy (with optimistic locking via @Version)
+        BookCopy availableCopy = bookCopyRepo.findFirstByBookIdAndStatus(book.getId(), BookStatus.AVAILABLE)
+                .orElseThrow(() -> new NoCopyAvailableException("No copies available for: " + book.getBookTitle()));
+
+        // 7. Update copy status - triggers version check on save
         availableCopy.setStatus(BookStatus.BORROWED);
-        availableCopy.setUser(user);
-        availableCopy.setIssueTime(LocalDateTime.now());
-        availableCopy.setReturnTime(LocalDateTime.now().plusDays(14));
-        user.getBookCopy().add(availableCopy);
+        availableCopy.setCurrentUser(user);
+        bookCopyRepo.save(availableCopy);
 
-        return com.tcs.Library.dto.IssueBookResponseDTO.builder()
-                .bookTitle(book.getBook_title())
-                .bookCopyPublicId(availableCopy.getCopypubId())
-                .userPublicId(user.getPublicId().toString())
-                .userName(user.getCustomerName())
-                .issueTime(availableCopy.getIssueTime())
-                .returnTime(availableCopy.getReturnTime())
-                .status(availableCopy.getStatus().name())
-                .build();
+        // 8. Create issue record
+        IssuedBooks issuedBook = new IssuedBooks();
+        issuedBook.setUser(user);
+        issuedBook.setBookCopy(availableCopy);
+        issuedBook.setIssueDate(LocalDate.now());
+        issuedBook.setDueDate(LocalDate.now().plusDays(LOAN_PERIOD_DAYS));
+        issuedBook.setStatus("BORROWED");
+        issuedBook.setFineAmount(BigDecimal.ZERO);
+
+        log.info("Book issued: {} to user: {}", book.getBookTitle(), user.getEmail());
+        return issuedBooksRepo.save(issuedBook);
+    }
+
+    @Transactional
+    public IssuedBooks returnBook(Long bookCopyId) {
+        // 1. Get the book copy
+        BookCopy copy = bookCopyRepo.findById(bookCopyId)
+                .orElseThrow(() -> new BookNotFoundException("Book copy not found: " + bookCopyId));
+
+        if (copy.getStatus() != BookStatus.BORROWED) {
+            throw new RuntimeException("Book copy is not currently borrowed");
+        }
+
+        // 2. Find the active issue record
+        IssuedBooks record = issuedBooksRepo.findByBookCopyIdAndStatus(bookCopyId, "BORROWED")
+                .orElseThrow(() -> new RuntimeException("No active borrow record found"));
+
+        User user = record.getUser();
+        LocalDate today = LocalDate.now();
+
+        // 3. Calculate fine if overdue
+        if (today.isAfter(record.getDueDate())) {
+            long daysOverdue = ChronoUnit.DAYS.between(record.getDueDate(), today);
+            BigDecimal fineAmount = FINE_PER_DAY.multiply(BigDecimal.valueOf(daysOverdue));
+            record.setFineAmount(fineAmount);
+
+            // Create fine record
+            Fine fine = new Fine();
+            fine.setUser(user);
+            fine.setIssuedBook(record);
+            fine.setAmount(fineAmount);
+            fine.setPaid(false);
+            fineRepo.save(fine);
+
+            // Update user's total unpaid fine
+            user.setTotalUnpaidFine(user.getTotalUnpaidFine().add(fineAmount));
+
+            // Check and mark as defaulter if needed
+            checkAndUpdateDefaulterStatus(user);
+            userRepo.save(user);
+
+            log.info("Fine of ₹{} applied for {} days overdue", fineAmount, daysOverdue);
+        }
+
+        // 4. Update copy status
+        copy.setStatus(BookStatus.AVAILABLE);
+        copy.setCurrentUser(null);
+        bookCopyRepo.save(copy);
+
+        // 5. Update issue record
+        record.setReturnDate(today);
+        record.setStatus("RETURNED");
+
+        log.info("Book returned: copy {} by user {}", bookCopyId, user.getEmail());
+        return issuedBooksRepo.save(record);
+    }
+
+    public void checkAndUpdateDefaulterStatus(User user) {
+        // Mark as defaulter if unpaid fine exceeds threshold
+        if (user.getTotalUnpaidFine().compareTo(DEFAULTER_FINE_THRESHOLD) > 0) {
+            user.setDefaulter(true);
+            log.warn("User {} marked as defaulter due to high unpaid fines: ₹{}",
+                    user.getEmail(), user.getTotalUnpaidFine());
+        }
+
+        // Also check for severely overdue books
+        LocalDate cutoffDate = LocalDate.now().minusDays(DEFAULTER_OVERDUE_DAYS);
+        var overdueBooks = issuedBooksRepo.findByUserIdAndStatus(user.getId(), "BORROWED")
+                .stream()
+                .filter(ib -> ib.getDueDate().isBefore(cutoffDate))
+                .toList();
+
+        if (!overdueBooks.isEmpty()) {
+            user.setDefaulter(true);
+            log.warn("User {} marked as defaulter due to {} books overdue by 30+ days",
+                    user.getEmail(), overdueBooks.size());
+        }
     }
 }

@@ -7,18 +7,16 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class UniqueCheckServiceImpl implements UniqueCheckService {
-    private final UserRepo userDS;
+
+    private final UserRepo userRepo;
 
     public boolean isEmailRegistered(String email) {
-        if (userDS.existsByEmail(email))
-            return true;
-        return false;
+        return userRepo.existsByEmail(email);
     }
 
     public boolean isMobileRegistered(String countryCode, String mobileNumber) {
-        if (userDS.existsByCountryCodeAndMobileNumber(countryCode, mobileNumber))
-            return true;
+        // This method is no longer needed as mobile number is not a unique constraint
+        // Keeping for backwards compatibility, always returns false
         return false;
     }
-
 }

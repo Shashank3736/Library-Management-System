@@ -1,6 +1,7 @@
 package com.tcs.Library.controllers;
 
 import org.apache.catalina.connector.Response;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RestController
 public class AuthorController {
-    private final AuthorService authsvc;
-
+    @Autowired
+    private AuthorService authsvc;
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthorSignUp dto) {
+    public ResponseEntity<?> register(@RequestBody AuthorSignUp dto) { 
         return ResponseEntity.ok(authsvc.registerAuthor(dto));
     }
 

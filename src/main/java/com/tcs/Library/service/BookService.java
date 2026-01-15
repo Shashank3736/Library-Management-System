@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,22 +13,20 @@ import com.tcs.Library.dto.BookDTO;
 import com.tcs.Library.dto.wrapper.BookMapper;
 import com.tcs.Library.entity.Author;
 import com.tcs.Library.entity.Book;
-import com.tcs.Library.entity.BookCopy;
 import com.tcs.Library.error.BookNotFoundException;
 import com.tcs.Library.error.NoAuthorFoundException;
 import com.tcs.Library.repository.AuthorRepo;
 import com.tcs.Library.repository.BookRepo;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
-@RequiredArgsConstructor
 public class BookService {
-    private final BookRepo bookRepo;
-    private final AuthorRepo authorRepo;
+    @Autowired
+    private BookRepo bookRepo;
+    @Autowired
+    private AuthorRepo authorRepo;
 
     @Transactional
-    public Book createBook(BookDTO dto) {
+    public Book createBook(BookDTO dto) throws NoAuthorFoundException {
 
         Set<Long> aids = dto.getAuthorId();
 
@@ -43,14 +42,6 @@ public class BookService {
         }
 
         Book newBook = BookMapper.toEntity(dto, authorSet);
-        int quantity = dto.getQuantity();
-
-        for (int i = 0; i < quantity; i++) {
-            BookCopy cpy = new BookCopy();
-            cpy.setBook(newBook);
-            newBook.getBooksCopy().add(cpy);
-        }
-
         return bookRepo.save(newBook);
     }
 
@@ -58,8 +49,10 @@ public class BookService {
         return bookRepo.findAll();
     }
 
+
     public Book getBookByPubId(String pubId) {
         return bookRepo.findByPublicId(pubId).orElseThrow(() -> new BookNotFoundException(pubId));
     }
+
 
 }

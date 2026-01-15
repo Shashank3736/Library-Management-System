@@ -1,8 +1,9 @@
 package com.tcs.Library.enums;
 
 public enum BookStatus {
-    FIRST,
-    RETURNED,
-    OVERDUE,
-    BORROWED
+    AVAILABLE,
+    BORROWED,
+    RESERVED,
+    LOST,
+    DAMAGED
 }

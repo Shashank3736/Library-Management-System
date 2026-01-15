@@ -1,17 +1,13 @@
 package com.tcs.Library.service;
 
 import java.util.List;
-
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.tcs.Library.dto.AuthorSignUp;
-import com.tcs.Library.dto.wrapper.AuthorMapper;
 import com.tcs.Library.entity.Author;
 import com.tcs.Library.entity.Book;
-import com.tcs.Library.error.NoAuthorFoundException;
 import com.tcs.Library.repository.AuthorRepo;
-
+import com.tcs.Library.dto.AuthorSignUp;
+import com.tcs.Library.dto.wrapper.AuthorMapper;
+import com.tcs.Library.error.NoAuthorFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,16 +16,12 @@ public class AuthorService {
 
     private final AuthorRepo authorRepo;
 
-    @Transactional(readOnly = true)
-    public List<Book> getBooksByAuthorId(Long authorId) {
-        Author author = authorRepo.findById(authorId)
-                .orElseThrow(() -> new NoAuthorFoundException(
-                        "No author found with id: " + authorId));
-
+    public List<Book> getByAuthorId(Long id) {
+        Author author = authorRepo.findById(id)
+                .orElseThrow(() -> new NoAuthorFoundException("No Author for ID: " + id));
         return author.getBook();
     }
 
-    @Transactional
     public Author registerAuthor(AuthorSignUp dto) {
         Author author = AuthorMapper.toEntity(dto);
         return authorRepo.save(author);

@@ -3,7 +3,7 @@ package com.tcs.Library.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -22,24 +22,35 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @Column(name = "public_id", nullable = false, unique = true, updatable = false)
     private UUID publicId;
+
     private String customerName;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
     private String countryCode;
     private String mobileNumber;
     private String address;
     private LocalDate dateOfBirth;
     private String passwordHash;
     private String secretQuestion;
-    private boolean defaulter=false;
+
+    @Column(nullable = false)
+    private boolean isDefaulter = false;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalUnpaidFine = BigDecimal.ZERO;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "users_id"))
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Set<Role> roles = new HashSet<>();
-    @OneToMany(mappedBy = "user")
-    private List<BookCopy> bookCopy = new ArrayList<>();
 
     @PrePersist
     public void generatePublicId() {
@@ -50,8 +61,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-                .toList();
+        return roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role.name())).toList();
     }
 
     @Override
@@ -64,4 +74,32 @@ public class User implements UserDetails {
         return this.email;
     }
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !isDefaulter;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
+    // Custom getter for isDefaulter (Lombok generates isIsDefaulter)
+    public boolean isDefaulter() {
+        return isDefaulter;
+    }
+
+    public void setDefaulter(boolean defaulter) {
+        isDefaulter = defaulter;
+    }
 }
