@@ -1,14 +1,13 @@
 
 package com.tcs.Library.utils;
 
-import com.tcs.Library.entity.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.GrantedAuthoritiesContainer;
+
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -59,10 +58,10 @@ public class AuthUtils {
     }
 
     // public String generateRefreshToken(User user) {
-    //     Instant now = Instant.now();
-    //     return Jwts.builder().subject(user.getUsername()).issuedAt(Date.from(now))
-    //             .expiration(Date.from(now.plus(refreshExpDays, ChronoUnit.DAYS)))
-    //             .claim("type", "refresh").signWith(getSigningKey()).compact();
+    // Instant now = Instant.now();
+    // return Jwts.builder().subject(user.getUsername()).issuedAt(Date.from(now))
+    // .expiration(Date.from(now.plus(refreshExpDays, ChronoUnit.DAYS)))
+    // .claim("type", "refresh").signWith(getSigningKey()).compact();
     // }
 
     public String extractUsername(String token) {

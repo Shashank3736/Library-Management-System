@@ -2,7 +2,6 @@
 package com.tcs.Library.dto;
 
 import java.util.Set;
-import com.tcs.Library.entity.Author;
 import com.tcs.Library.enums.BookType;
 
 import lombok.AllArgsConstructor;

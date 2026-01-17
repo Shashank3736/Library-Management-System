@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.tcs.Library.dto.LoginRequest;
-import com.tcs.Library.dto.LoginResponse;
 import com.tcs.Library.dto.SignUpResponse;
 import com.tcs.Library.dto.UserRegRequest;
 import com.tcs.Library.service.AuthService;

@@ -3,8 +3,6 @@ package com.tcs.Library.config;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-//port org.springframework.boot.web.server.autoconfigure.ServerProperties.Reactive.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,8 +30,6 @@ public class SecurityConfig {
     private CustomUserDetailService customUserDetailService;
     @Autowired
     private JwtAuthenticationFilter jwtFilter;
-    // @Value("${server.servlet.context-path}")
-    // private static String basePath;
 
     @Bean
     public PasswordEncoder passwordEncoder() {

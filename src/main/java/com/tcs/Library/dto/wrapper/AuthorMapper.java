@@ -1,7 +1,6 @@
 package com.tcs.Library.dto.wrapper;
 
 import com.tcs.Library.dto.AuthorSignUp;
-import com.tcs.Library.dto.UserRegRequest;
 import com.tcs.Library.entity.Author;
 
 public class AuthorMapper {
