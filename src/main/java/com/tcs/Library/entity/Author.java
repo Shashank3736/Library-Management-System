@@ -6,7 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +24,17 @@ public class Author {
     private String name;
     @Column(name = "email", unique = true)
     private String email;
+
+    @Column(name = "public_id", unique = true, nullable = false, updatable = false)
+    private String publicId;
+
     @ManyToMany(mappedBy = "authors")
     private List<Book> book;
+
+    @PrePersist
+    public void generatePublicId() {
+        if (publicId == null) {
+            publicId = java.util.UUID.randomUUID().toString();
+        }
+    }
 }

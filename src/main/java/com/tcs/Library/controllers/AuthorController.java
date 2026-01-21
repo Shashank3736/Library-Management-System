@@ -60,7 +60,8 @@ public class AuthorController {
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Author> authors = authorService.searchByName(name, pageable);
+        // Using 'name' param as general query for name OR email
+        Page<Author> authors = authorService.searchByNameOrEmail(name, pageable);
         return ResponseEntity.ok(ApiResponse.success("Authors found", PagedResponse.from(authors)));
     }
 

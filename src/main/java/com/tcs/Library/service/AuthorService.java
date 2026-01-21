@@ -105,6 +105,13 @@ public class AuthorService {
     }
 
     /**
+     * Search authors by name OR email with pagination.
+     */
+    public Page<Author> searchByNameOrEmail(String query, Pageable pageable) {
+        return authorRepo.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query, pageable);
+    }
+
+    /**
      * Get author by ID.
      */
     public Author getById(Long id) {

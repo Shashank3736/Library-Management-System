@@ -13,6 +13,12 @@ import com.tcs.Library.entity.Author;
 @Repository
 public interface AuthorRepo extends JpaRepository<Author, Long> {
 
+    /** Find author by public ID */
+    Optional<Author> findByPublicId(String publicId);
+
+    /** Find authors by list of public IDs */
+    List<Author> findByPublicIdIn(java.util.Collection<String> publicIds);
+
     /** Find author by unique email */
     Optional<Author> findByEmail(String email);
 
@@ -24,6 +30,10 @@ public interface AuthorRepo extends JpaRepository<Author, Long> {
 
     /** Paginated search by name */
     Page<Author> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    /** Paginated search by name or email */
+    Page<Author> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(String name, String email,
+            Pageable pageable);
 
     /** Find all authors with pagination */
     Page<Author> findAll(Pageable pageable);

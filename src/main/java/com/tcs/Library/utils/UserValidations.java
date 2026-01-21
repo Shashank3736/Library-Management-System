@@ -243,71 +243,7 @@ public class UserValidations {
         return Objects.equals(password, confirmPassword);
     }
 
-    // -----------------------------
-    // Password Hashing (PBKDF2)
-    // -----------------------------
-    private static final int PBKDF2_ITERATIONS = 120_000;
-    private static final int SALT_BYTES = 16;
-    private static final int HASH_BYTES = 32; // 256-bit
-
-    /**
-     * Hash password using PBKDF2WithHmacSHA256. Returns:
-     * iterations:saltBase64:hashBase64
-     */
-    public static String hashPassword(String rawPassword) {
-        if (isBlank(rawPassword)) {
-            throw new IllegalArgumentException("Password cannot be blank");
-        }
-
-        byte[] salt = new byte[SALT_BYTES];
-        new SecureRandom().nextBytes(salt);
-
-        byte[] hash = pbkdf2(rawPassword.toCharArray(), salt, PBKDF2_ITERATIONS, HASH_BYTES);
-
-        return PBKDF2_ITERATIONS + ":" + Base64.getEncoder().encodeToString(salt) + ":"
-                + Base64.getEncoder().encodeToString(hash);
-    }
-
-    public static boolean verifyPassword(String rawPassword, String stored) {
-        if (isBlank(rawPassword) || isBlank(stored))
-            return false;
-
-        String[] parts = stored.split(":");
-        if (parts.length != 3)
-            return false;
-
-        int iterations = Integer.parseInt(parts[0]);
-        byte[] salt = Base64.getDecoder().decode(parts[1]);
-        byte[] expectedHash = Base64.getDecoder().decode(parts[2]);
-
-        byte[] computedHash = pbkdf2(rawPassword.toCharArray(), salt, iterations, expectedHash.length);
-
-        return constantTimeEquals(expectedHash, computedHash);
-    }
-
-    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int hashBytes) {
-        try {
-            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, hashBytes * 8);
-            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-            return skf.generateSecret(spec).getEncoded();
-        } catch (Exception e) {
-            throw new RuntimeException("Error while hashing password", e);
-        }
-    }
-
-    private static boolean constantTimeEquals(byte[] a, byte[] b) {
-        if (a == null || b == null)
-            return false;
-        if (a.length != b.length)
-            return false;
-        int result = 0;
-        for (int i = 0; i < a.length; i++) {
-            result |= (a[i] ^ b[i]);
-        }
-        return result == 0;
-    }
-
-    // -----------------------------
+       // -----------------------------
     // Helpers
     // -----------------------------
     private static boolean isBlank(String s) {

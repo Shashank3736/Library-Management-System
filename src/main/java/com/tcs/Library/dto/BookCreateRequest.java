@@ -37,10 +37,15 @@ public class BookCreateRequest {
     private int quantity = 1;
 
     /**
+     * Set of author public IDs. Use this to link existing authors.
+     */
+    private Set<String> authorIds;
+
+    /**
      * Set of author emails. Authors will be looked up by email.
      * If an author doesn't exist, they will be created.
+     * Optional if authorIds are provided.
      */
-    @NotNull(message = "At least one author email is required")
     private Set<AuthorInfo> authors;
 
     /**

@@ -188,8 +188,9 @@ public class AdminController {
     // ========== BOOK MANAGEMENT ==========
 
     /**
-     * Add a new book using author emails.
-     * Authors will be looked up by email or created if they don't exist.
+     * Add a new book using author emails OR author Public IDs.
+     * Authors will be looked up by Public ID or email (created if they don't exist
+     * via email).
      */
     @PostMapping("/books")
     public ResponseEntity<ApiResponse<Book>> addBookWithAuthors(
