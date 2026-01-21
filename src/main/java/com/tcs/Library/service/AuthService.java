@@ -1,7 +1,5 @@
 package com.tcs.Library.service;
 
-import com.tcs.Library.config.CustomUserDetailService;
-
 import java.time.Clock;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import com.tcs.Library.dto.LoginRequest;
 import com.tcs.Library.dto.LoginResponse;
@@ -37,8 +34,6 @@ public class AuthService {
     @Autowired
     private UserValidations res;
     private final PasswordEncoder passwordEncoder;
-    @Autowired
-    private CustomUserDetailService detailService;
 
     public LoginResponse login(LoginRequest req) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(req.getEmail(),
@@ -46,10 +41,13 @@ public class AuthService {
 
         authManager.authenticate(authToken);
 
-        UserDetails userDetails = detailService.loadUserByUsername(req.getEmail());
+        com.tcs.Library.entity.User user = userDS.findByEmail(req.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        String token = authUtils.generateAccessToken(userDetails.getUsername(),
-                userDetails.getAuthorities());
+        String token = authUtils.generateAccessToken(user.getUsername(),
+                user.getCustomerName(),
+                user.getPublicId().toString(),
+                user.getAuthorities());
 
         return new LoginResponse(token);
     }

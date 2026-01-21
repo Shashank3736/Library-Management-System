@@ -39,7 +39,7 @@ public class AuthUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateAccessToken(String username,
+    public String generateAccessToken(String username, String customerName, String userPublicId,
             Collection<? extends GrantedAuthority> authority) {
 
         List<String> roles = authority.stream().filter(Objects::nonNull)
@@ -49,6 +49,8 @@ public class AuthUtils {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
+        claims.put("customerName", customerName);
+        claims.put("userPublicId", userPublicId);
 
         Instant now = Instant.now();
         return Jwts.builder().subject(username).header().empty().add("type", "JWT").and()
