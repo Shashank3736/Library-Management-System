@@ -1,6 +1,9 @@
 package com.tcs.Library.entity;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,6 +31,7 @@ public class Author {
     @Column(name = "public_id", unique = true, nullable = false, updatable = false)
     private String publicId;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "authors")
     private List<Book> book;
 

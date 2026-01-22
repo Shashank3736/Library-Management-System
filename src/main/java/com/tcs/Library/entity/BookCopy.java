@@ -1,5 +1,6 @@
 package com.tcs.Library.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tcs.Library.enums.BookStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -24,10 +25,12 @@ public class BookCopy {
     @Enumerated(EnumType.STRING)
     private BookStatus status = BookStatus.AVAILABLE;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_user_id")
     private User currentUser;
