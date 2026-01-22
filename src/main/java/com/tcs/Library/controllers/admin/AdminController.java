@@ -19,6 +19,7 @@ import com.tcs.Library.dto.PagedResponse;
 import com.tcs.Library.dto.BookCreateRequest;
 import com.tcs.Library.dto.BookDTO;
 import com.tcs.Library.dto.DonationApprovalRequest;
+import com.tcs.Library.dto.DonationResponse;
 import com.tcs.Library.entity.Book;
 import com.tcs.Library.entity.BookDonation;
 import com.tcs.Library.entity.User;
@@ -164,8 +165,8 @@ public class AdminController {
     // ========== DONATION MANAGEMENT ==========
 
     @GetMapping("/donations")
-    public ResponseEntity<ApiResponse<List<BookDonation>>> getPendingDonations() {
-        List<BookDonation> donations = donationService.getPendingDonations();
+    public ResponseEntity<ApiResponse<List<DonationResponse>>> getPendingDonations() {
+        List<DonationResponse> donations = donationService.getPendingDonations();
         return ResponseEntity.ok(ApiResponse.success("Pending donations retrieved", donations));
     }
 

@@ -2,6 +2,7 @@ package com.tcs.Library.controllers;
 
 import com.tcs.Library.dto.ApiResponse;
 import com.tcs.Library.dto.DonationRequest;
+import com.tcs.Library.dto.DonationResponse;
 import com.tcs.Library.entity.BookDonation;
 import com.tcs.Library.entity.User;
 import com.tcs.Library.service.DonationService;
@@ -31,8 +32,8 @@ public class DonationController {
 
     @GetMapping("/my")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<ApiResponse<List<BookDonation>>> getMyDonations(@AuthenticationPrincipal User user) {
-        List<BookDonation> donations = donationService.getUserDonations(user.getId());
+    public ResponseEntity<ApiResponse<List<DonationResponse>>> getMyDonations(@AuthenticationPrincipal User user) {
+        List<DonationResponse> donations = donationService.getUserDonations(user.getPublicId());
         return ResponseEntity.ok(ApiResponse.success("Your donations retrieved", donations));
     }
 }
