@@ -15,7 +15,7 @@ import lombok.Setter;
 public class ComplaintActionRequest {
 
     /** Action: "RESOLVE" or "REJECT" */
-    @NotBlank(message = "Action is required")
+   // @NotBlank(message = "Action is required")
     private String action;
 
     @Size(max = 1000, message = "Response cannot exceed 1000 characters")
