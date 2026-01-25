@@ -88,11 +88,6 @@ public class FirstStartData {
     }
 
     private void createSampleBooks() {
-        if (bookRepo.count() > 0) {
-            log.info("Books already exist, skipping sample data creation.");
-            return;
-        }
-
         // Define Authors
         BookCreateRequest.AuthorInfo rowling = new BookCreateRequest.AuthorInfo("jk@rowling.com",
                 "J.K. Rowling");
@@ -126,10 +121,15 @@ public class FirstStartData {
         createBook("Murder on the Orient Express", BookType.FICTION, 6, christie);
         createBook("And Then There Were None", BookType.FICTION, 7, christie);
 
-        log.info("15 Sample books initialized.");
+        log.info("Sample books initialization check completed.");
     }
 
     private void createBook(String title, BookType type, int quantity, BookCreateRequest.AuthorInfo author) {
+        if (bookRepo.existsByBookTitle(title)) {
+            log.info("Book '{}' already exists. Skipping creation.", title);
+            return;
+        }
+
         BookCreateRequest request = new BookCreateRequest();
         request.setBookTitle(title);
         request.setCategory(type);
@@ -140,6 +140,7 @@ public class FirstStartData {
 
         try {
             bookService.createBookWithAuthors(request);
+            log.info("Created sample book: {}", title);
         } catch (Exception e) {
             log.error("Failed to create sample book: {}", title, e);
         }
