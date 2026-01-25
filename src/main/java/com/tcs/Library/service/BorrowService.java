@@ -179,6 +179,26 @@ public class BorrowService {
                 .orElseThrow(() -> new InvalidBookOperationException(
                         "You don't have an active borrow for: " + book.getBookTitle()));
 
+        // Change: Instead of processing return immediately, set status to
+        // RETURN_INITIATED
+        record.setStatus("RETURN_INITIATED");
+        log.info("Return initiated for book: {} by user: {}", book.getBookTitle(), user.getEmail());
+        return issuedBooksRepo.save(record);
+    }
+
+    /**
+     * Approve a return request (Admin only).
+     */
+    @Transactional
+    public IssuedBooks approveReturn(Long recordId) {
+        IssuedBooks record = issuedBooksRepo.findById(recordId)
+                .orElseThrow(() -> new InvalidBookOperationException("Borrow record not found: " + recordId));
+
+        if (!"RETURN_INITIATED".equals(record.getStatus())) {
+            throw new InvalidBookOperationException(
+                    "Return has not been initiated for this book. Current status: " + record.getStatus());
+        }
+
         BookCopy copy = record.getBookCopy();
         return processReturn(record, copy);
     }
@@ -187,7 +207,7 @@ public class BorrowService {
      * Get all currently borrowed books for a user.
      */
     public List<IssuedBooks> getUserBorrowedBooks(User user) {
-        return issuedBooksRepo.findByUserIdAndStatus(user.getId(), "BORROWED");
+        return issuedBooksRepo.findByUserIdAndStatusIn(user.getId(), List.of("BORROWED", "RETURN_INITIATED"));
     }
 
     /**
@@ -321,7 +341,7 @@ public class BorrowService {
      * Get all borrowed books with filters and pagination.
      */
     public org.springframework.data.domain.Page<IssuedBooks> getAllBorrowedBooksWithFilters(
-            String memberName, String category, LocalDate startDate, LocalDate endDate,
+            String memberName, String category, String status, LocalDate startDate, LocalDate endDate,
             org.springframework.data.domain.Pageable pageable) {
 
         com.tcs.Library.enums.BookType bookType = null;
@@ -332,7 +352,7 @@ public class BorrowService {
                 log.warn("Invalid category filter: {}", category);
             }
         }
-        return issuedBooksRepo.findAllWithFilters(memberName, bookType, startDate, endDate, pageable);
+        return issuedBooksRepo.findAllWithFilters(memberName, bookType, status, startDate, endDate, pageable);
     }
 
     /**
