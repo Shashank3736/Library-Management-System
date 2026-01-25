@@ -476,6 +476,11 @@ public class FirstStartData1 {
             complaint.setFirstStaffRejected(false);
             complaint.setSecondStaffRejected(false);
             complaint.setCreatedAt(LocalDateTime.now().minusDays(20 + i));
+            if (i % 2 == 0) {
+                complaint.setAssignedStaff(userRepo.findById(3L).get());
+            } else {
+                complaint.setAssignedStaff(userRepo.findById(2L).get());
+            }
 
             complaintRepo.save(complaint);
         }
