@@ -228,64 +228,19 @@ public class ComplaintService {
     private ComplaintResponse rejectByStaff(Complaint complaint, User staff,
             ComplaintActionRequest request, boolean isSecondStaff) {
 
-        if (isSecondStaff) {
-            // Second staff rejecting - escalate to admin
-            complaint.setSecondStaffRejected(true);
-            complaint.setSecondStaffResponse(request.getResponse());
-            complaint.setStatus(ComplaintStatus.ESCALATED_TO_ADMIN);
-            complaint.setRejectionReason(request.getNotes());
+        // Any staff rejecting - escalate to admin immediately
+        complaint.setStaffResponse(request.getResponse());
+        complaint.setStatus(ComplaintStatus.ESCALATED_TO_ADMIN);
+        complaint.setRejectionReason(request.getNotes());
 
-            // Auto-assign to an admin
-            autoAssignToAdmin(complaint);
+        // Auto-assign to an admin
+        autoAssignToAdmin(complaint);
 
-            log.info("Complaint {} escalated to admin after second staff rejection",
-                    complaintId(complaint));
-        } else {
-            // First staff rejecting - assign to another staff
-            complaint.setFirstStaffRejected(true);
-            complaint.setStaffResponse(request.getResponse());
-            complaint.setStatus(ComplaintStatus.REJECTED_FIRST);
-
-            // Find another staff member
-            assignToSecondStaff(complaint, staff);
-        }
+        log.info("Complaint {} rejected by staff {} and escalated to admin",
+                complaintId(complaint), staff.getEmail());
 
         Complaint saved = complaintRepo.save(complaint);
         return ComplaintMapper.toResponse(saved);
-    }
-
-    /**
-     * Assign to a second staff member after first rejection.
-     */
-    private void assignToSecondStaff(Complaint complaint, User firstStaff) {
-        List<User> staffMembers = userRepo.findAll().stream()
-                .filter(u -> u.getRoles().contains(Role.STAFF))
-                .filter(u -> !u.getId().equals(firstStaff.getId())) // Exclude first staff
-                .toList();
-
-        if (staffMembers.isEmpty()) {
-            // No other staff available, escalate to admin
-            complaint.setStatus(ComplaintStatus.ESCALATED_TO_ADMIN);
-            autoAssignToAdmin(complaint);
-            log.warn("No second staff available, escalating complaint {} to admin",
-                    complaintId(complaint));
-            return;
-        }
-
-        // Find staff with least active complaints
-        User secondStaff = staffMembers.stream()
-                .min((s1, s2) -> {
-                    long count1 = complaintRepo.countActiveComplaintsByStaff(s1, ACTIVE_STATUSES);
-                    long count2 = complaintRepo.countActiveComplaintsByStaff(s2, ACTIVE_STATUSES);
-                    return Long.compare(count1, count2);
-                })
-                .orElse(staffMembers.get(0));
-
-        complaint.setSecondAssignedStaff(secondStaff);
-        complaint.setStatus(ComplaintStatus.ASSIGNED);
-
-        log.info("Complaint {} assigned to second staff: {}",
-                complaintId(complaint), secondStaff.getEmail());
     }
 
     /**

@@ -61,6 +61,7 @@ public class DonationService {
         return donations.stream()
                 .map(d -> new DonationResponse(
                         d.getId(),
+                        d.getUser().getCustomerName(),
                         d.getBookTitle(),
                         d.getAuthor(),
                         d.getQuantityOffered(),
@@ -79,6 +80,7 @@ public class DonationService {
         return donations.stream()
                 .map(d -> new DonationResponse(
                         d.getId(),
+                        user.getCustomerName(),
                         d.getBookTitle(),
                         d.getAuthor(),
                         d.getQuantityOffered(),

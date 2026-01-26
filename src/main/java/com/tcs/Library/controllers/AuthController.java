@@ -23,7 +23,7 @@ public class AuthController {
         try {
             return ResponseEntity.ok(authService.login(loginRequest));
         } catch (BadCredentialsException ex) {
-            return ResponseEntity.badRequest().body("Incorrect Credentials");
+            return ResponseEntity.badRequest().body(ApiResponse.error("Incorrect Credentials"));
         }
     }
 

@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class DonationResponse {
     private Long id;
+    private String donorName;
     private String bookTitle;
     private String author;
     private int quantityOffered;
