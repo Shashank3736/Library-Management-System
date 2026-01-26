@@ -106,44 +106,61 @@ public class FirstStartData {
                                 "Agatha Christie");
 
                 // Create Books
-                createBook("Harry Potter and the Philosopher's Stone", BookType.FICTION, 5, rowling);
-                createBook("Harry Potter and the Chamber of Secrets", BookType.FICTION, 4, rowling);
-                createBook("Harry Potter and the Prisoner of Azkaban", BookType.FICTION, 6, rowling);
+                createBook("Harry Potter and the Philosopher's Stone", BookType.FICTION, 5, rowling,
+                                "Harry Potter discovers he is a wizard and begins his education at Hogwarts School of Witchcraft and Wizardry.");
+                createBook("Harry Potter and the Chamber of Secrets", BookType.FICTION, 4, rowling,
+                                "Harry returns to Hogwarts for his second year, where checks and threats attack students.");
+                createBook("Harry Potter and the Prisoner of Azkaban", BookType.FICTION, 6, rowling,
+                                "Harry learns that Sirius Black, an escaped prisoner, is after him.");
 
-                createBook("A Game of Thrones", BookType.FICTION, 3, martin);
-                createBook("A Clash of Kings", BookType.FICTION, 3, martin);
-                createBook("A Storm of Swords", BookType.FICTION, 2, martin);
+                createBook("A Game of Thrones", BookType.FICTION, 3, martin,
+                                "Noble families fight for control of the mythical land of Westeros.");
+                createBook("A Clash of Kings", BookType.FICTION, 3, martin,
+                                "Civil war chaos erupts as several men claim the Iron Throne.");
+                createBook("A Storm of Swords", BookType.FICTION, 2, martin,
+                                "The war for the Iron Throne of Westeros rages on.");
 
-                createBook("The Hobbit", BookType.FICTION, 10, tolkien);
-                createBook("The Fellowship of the Ring", BookType.FICTION, 8, tolkien);
-                createBook("The Two Towers", BookType.FICTION, 8, tolkien);
-                createBook("The Return of the King", BookType.FICTION, 8, tolkien);
+                createBook("The Hobbit", BookType.FICTION, 10, tolkien,
+                                "Bilbo Baggins is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor.");
+                createBook("The Fellowship of the Ring", BookType.FICTION, 8, tolkien,
+                                "Frodo Baggins begins his journey to destroy the One Ring.");
+                createBook("The Two Towers", BookType.FICTION, 8, tolkien,
+                                "The Fellowship is broken, and the quest continues in two groups.");
+                createBook("The Return of the King", BookType.FICTION, 8, tolkien,
+                                "The final battle for Middle-earth begins.");
 
-                createBook("Foundation", BookType.SCIFI, 5, asimov);
-                createBook("I, Robot", BookType.SCIFI, 4, asimov);
-                createBook("The Caves of Steel", BookType.SCIFI, 3, asimov);
+                createBook("Foundation", BookType.SCIFI, 5, asimov,
+                                "A mathematician predicts the fall of the Galactic Empire and creates a Foundation to save knowledge.");
+                createBook("I, Robot", BookType.SCIFI, 4, asimov,
+                                "A collection of short stories exploring the interaction between humans and robots.");
+                createBook("The Caves of Steel", BookType.SCIFI, 3, asimov,
+                                "A detective and a robot investigate a murder in a future overpopulated Earth.");
 
-                createBook("Murder on the Orient Express", BookType.FICTION, 6, christie);
-                createBook("And Then There Were None", BookType.FICTION, 7, christie);
+                createBook("Murder on the Orient Express", BookType.FICTION, 6, christie,
+                                "Hercule Poirot investigates a murder on the famous luxury train.");
+                createBook("And Then There Were None", BookType.FICTION, 7, christie,
+                                "Ten strangers are lured to an island and killed one by one.");
 
                 log.info("15 Sample books initialized.");
         }
 
-    private void createBook(String title, BookType type, int quantity, BookCreateRequest.AuthorInfo author) {
-        BookCreateRequest request = new BookCreateRequest();
-        request.setBookTitle(title);
-        request.setCategory(type);
-        request.setQuantity(quantity);
-        request.setAuthors(Set.of(author));
-        // Placeholder image or empty
-        request.setCoverUrl("https://placehold.co/400x600?text=" + title.replace(" ", "+"));
+        private void createBook(String title, BookType type, int quantity, BookCreateRequest.AuthorInfo author,
+                        String description) {
+                BookCreateRequest request = new BookCreateRequest();
+                request.setBookTitle(title);
+                request.setCategory(type);
+                request.setQuantity(quantity);
+                request.setAuthors(Set.of(author));
+                request.setDescription(description);
+                // Placeholder image or empty
+                request.setCoverUrl("https://placehold.co/400x600?text=" + title.replace(" ", "+"));
 
-        try {
-            bookService.createBookWithAuthors(request);
-        } catch (Exception e) {
-            log.error("Failed to create sample book: {}", title, e);
+                try {
+                        bookService.createBookWithAuthors(request);
+                } catch (Exception e) {
+                        log.error("Failed to create sample book: {}", title, e);
+                }
         }
-    }
 
         private void issueSampleBookToTestUser() {
                 try {

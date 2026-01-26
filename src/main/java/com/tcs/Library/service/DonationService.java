@@ -117,30 +117,31 @@ public class DonationService {
 
         // Create book and copies if quantity > 0
         if (request.getQuantityApproved() > 0) {
-            Book book = bookRepo.findByBookTitleIgnoreCase(donation.getBookTitle())
+            Book book = bookRepo.findByBookTitleIgnoreCaseAndAuthorNameIgnoreCase(donation.getBookTitle(), donation.getAuthor())
                     .orElseGet(() -> {
                         Book newBook = new Book();
                         newBook.setBookTitle(donation.getBookTitle());
+                        newBook.setAuthorName(donation.getAuthor());
                         newBook.setTotalCopies(0);
                         return bookRepo.save(newBook);
                     });
 
             // Handle Author mapping
-            if (donation.getAuthor() != null && !donation.getAuthor().trim().isEmpty()) {
-                String authorName = donation.getAuthor().trim();
-                Author author = authorRepo.findByNameIgnoreCase(authorName)
-                        .orElseGet(() -> {
-                            Author newAuthor = new Author();
-                            newAuthor.setName(authorName);
-                            return authorRepo.save(newAuthor);
-                        });
+            // if (donation.getAuthor() != null && !donation.getAuthor().trim().isEmpty()) {
+            //     String authorName = donation.getAuthor().trim();
+            //     Author author = authorRepo.findByNameIgnoreCase(authorName)
+            //             .orElseGet(() -> {
+            //                 Author newAuthor = new Author();
+            //                 newAuthor.setName(authorName);
+            //                 return authorRepo.save(newAuthor);
+            //             });
 
-                if (book.getAuthors() == null) {
-                    book.setAuthors(new java.util.HashSet<>());
-                }
-                book.getAuthors().add(author);
-                bookRepo.save(book);
-            }
+            //     if (book.getAuthors() == null) {
+            //         book.setAuthors(new java.util.HashSet<>());
+            //     }
+            //     book.getAuthors().add(author);
+            //     bookRepo.save(book);
+            // }
 
             // Add copies
             for (int i = 0; i < request.getQuantityApproved(); i++) {

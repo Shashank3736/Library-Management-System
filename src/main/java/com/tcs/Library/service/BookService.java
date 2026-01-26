@@ -150,7 +150,8 @@ public class BookService {
         }
 
         // 1. Check if book exists
-        java.util.Optional<Book> existingBookOpt = bookRepo.findByBookTitleIgnoreCaseAndAuthorNameIgnoreCase(request.getBookTitle(),
+        java.util.Optional<Book> existingBookOpt = bookRepo.findByBookTitleIgnoreCaseAndAuthorNameIgnoreCase(
+                request.getBookTitle(),
                 authorName);
 
         if (existingBookOpt.isPresent()) {
@@ -286,13 +287,13 @@ public class BookService {
         book.setBookTitle(request.getTitle());
         book.setCategory(request.getCategory());
         book.setDescription(request.getDescription());
-
+        
         // 4. Update Author (Simplified: Replace existing authors with the new single
         // author)
         // Note: This logic assumes the UI sends a single author name.
         if (request.getAuthor() != null && !request.getAuthor().trim().isEmpty()) {
             String authorName = request.getAuthor().trim();
-
+            book.setAuthorName(authorName);
             // Try to find author by exact name match first
             // Note: Ideally we should use email or ID, but UI only sends name.
             // We'll search by name or create a new one if strictly needed,
