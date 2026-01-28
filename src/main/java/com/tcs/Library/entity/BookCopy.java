@@ -14,6 +14,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "book_copy")
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE book_copy SET deleted = true WHERE id = ? AND version = ?")
+@org.hibernate.annotations.SQLRestriction("deleted = false")
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class BookCopy {
     @Id
@@ -22,6 +24,9 @@ public class BookCopy {
 
     @Version
     private Long version;
+
+    @Column(name = "deleted", nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
 
     @Column(name = "copy_public_id", unique = true)
     private String copyPublicId;

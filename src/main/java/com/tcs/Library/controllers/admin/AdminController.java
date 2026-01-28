@@ -88,7 +88,7 @@ public class AdminController {
                 : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<User> users = userRepo.findAll(pageable);
+        Page<User> users = userRepo.findByDeletedFalse(pageable);
         return ResponseEntity.ok(ApiResponse.success("Users retrieved", PagedResponse.from(users)));
     }
 
@@ -117,7 +117,7 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> users = userRepo.findByCustomerNameContainingIgnoreCase(name, pageable);
+        Page<User> users = userRepo.findByCustomerNameContainingIgnoreCaseAndDeletedFalse(name, pageable);
         return ResponseEntity.ok(ApiResponse.success("Search results", PagedResponse.from(users)));
     }
 
@@ -184,7 +184,8 @@ public class AdminController {
                     "Cannot delete user with active borrowed books. Please ensure all books are returned first."));
         }
 
-        userRepo.delete(user);
+        user.setDeleted(true);
+        userRepo.save(user);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
     }
 

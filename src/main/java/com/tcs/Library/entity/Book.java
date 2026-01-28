@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @Table(name = "book", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "book_title", "author_name" })
 })
+@org.hibernate.annotations.SQLDelete(sql = "UPDATE book SET deleted = true WHERE id = ? AND version = ?")
+@org.hibernate.annotations.SQLRestriction("deleted = false")
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Book {
     @Id
@@ -31,6 +33,9 @@ public class Book {
 
     @Version
     private Long version;
+
+    @Column(name = "deleted", nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
 
     @Column(name = "public_id", nullable = false, unique = true, updatable = false)
     private String publicId;

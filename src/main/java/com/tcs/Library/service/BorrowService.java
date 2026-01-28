@@ -72,7 +72,7 @@ public class BorrowService {
 
             if (isStillDefaulter) {
                 // User is legitimately a defaulter
-                throw new UserIsDefaulterException(
+            throw new UserIsDefaulterException(
                         "User is a defaulter: " + reason.toString() + "Please resolve these issues to borrow books.");
             } else {
                 // False positive - legacy flag found. Auto-correct it.
