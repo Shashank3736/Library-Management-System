@@ -21,15 +21,19 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
     boolean existsByEmail(String email);
 
-    // For dashboard stats - count users having a specific role
-    @Query("SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r WHERE r = :role")
+    // Find all non-deleted users
+    Page<User> findByDeletedFalse(Pageable pageable);
+
+    // For dashboard stats - count users having a specific role (excluding deleted)
+    @Query("SELECT COUNT(DISTINCT u) FROM User u JOIN u.roles r WHERE r = :role AND u.deleted = false")
     long countByRole(@Param("role") Role role);
 
     long countByIsDefaulter(boolean isDefaulter);
 
-    // For admin user management - find users having a specific role
-    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r = :role")
+    // For admin user management - find users having a specific role (excluding
+    // deleted)
+    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r = :role AND u.deleted = false")
     Page<User> findByRole(@Param("role") Role role, Pageable pageable);
 
-    Page<User> findByCustomerNameContainingIgnoreCase(String name, Pageable pageable);
+    Page<User> findByCustomerNameContainingIgnoreCaseAndDeletedFalse(String name, Pageable pageable);
 }

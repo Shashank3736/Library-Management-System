@@ -40,8 +40,46 @@ public class BorrowService {
 
         // 2. Check if user is a defaulter - block borrowing if flagged
         if (user.isDefaulter()) {
+            // Self-healing: Verify if user should actually be a defaulter
+            boolean isStillDefaulter = false;
+            StringBuilder reason = new StringBuilder();
+
+            // Check 1: Excessive Unpaid Fines
+            if (user.getTotalUnpaidFine().compareTo(DEFAULTER_FINE_THRESHOLD) > 0) {
+                isStillDefaulter = true;
+                reason.append("User has high unpaid fines (₹").append(user.getTotalUnpaidFine()).append("). ");
+            }
+
+            // Check 2: Severely Overdue Books
+            if (!isStillDefaulter) {
+                LocalDate cutoffDate = LocalDate.now().minusDays(DEFAULTER_OVERDUE_DAYS);
+                var longOverdueBooks = issuedBooksRepo.findByUserIdAndStatus(user.getId(), "BORROWED")
+                        .stream()
+                        .filter(ib -> ib.getDueDate().isBefore(cutoffDate))
+                        .toList();
+
+                if (!longOverdueBooks.isEmpty()) {
+                    isStillDefaulter = true;
+                    reason.append("User has ").append(longOverdueBooks.size())
+                            .append(" book(s) overdue by more than ").append(DEFAULTER_OVERDUE_DAYS).append(" days: ")
+                            .append(longOverdueBooks.stream()
+                                    .map(ib -> ib.getBookCopy().getBook().getBookTitle())
+                                    .collect(java.util.stream.Collectors.joining(", ")))
+                            .append(". ");
+                }
+            }
+
+            if (isStillDefaulter) {
+                // User is legitimately a defaulter
             throw new UserIsDefaulterException(
-                    "User is marked as a defaulter. Please contact library administration to resolve this issue before borrowing books.");
+                        "User is a defaulter: " + reason.toString() + "Please resolve these issues to borrow books.");
+            } else {
+                // False positive - legacy flag found. Auto-correct it.
+                log.info("Auto-correcting stale defaulter status for user {}", user.getEmail());
+                user.setDefaulter(false);
+                userRepo.save(user);
+                // Continue with flow...
+            }
         }
 
         // 3. Check if user has unpaid fines

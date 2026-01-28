@@ -98,9 +98,12 @@ public class User implements UserDetails {
         return true;
     }
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean deleted = false;
+
     @Override
     public boolean isEnabled() {
-        return true;
+        return !deleted;
     }
 
     // Custom getter for isDefaulter (Lombok generates isIsDefaulter)
