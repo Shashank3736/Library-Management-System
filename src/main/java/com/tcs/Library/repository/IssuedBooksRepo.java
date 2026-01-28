@@ -20,7 +20,7 @@ public interface IssuedBooksRepo extends JpaRepository<IssuedBooks, Long> {
         Optional<IssuedBooks> findByBookCopyIdAndStatus(Long bookCopyId, String status);
 
         // Check if user already has this book type borrowed
-        @Query("SELECT COUNT(ib) > 0 FROM IssuedBooks ib WHERE ib.user.id = :userId AND ib.bookCopy.book.id = :bookId AND ib.status = 'BORROWED'")
+        @Query("SELECT COUNT(ib) > 0 FROM IssuedBooks ib WHERE ib.user.id = :userId AND ib.bookCopy.book.id = :bookId AND ib.status IN ('BORROWED', 'RETURN_INITIATED')")
         boolean existsActiveBorrowByUserAndBook(@Param("userId") Long userId, @Param("bookId") Long bookId);
 
         // Find active borrow record for user and book

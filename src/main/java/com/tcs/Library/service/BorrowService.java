@@ -38,8 +38,7 @@ public class BorrowService {
         User user = userRepo.findByPublicId(request.getUserPublicId())
                 .orElseThrow(() -> new NoUserFoundException("User not found: " + request.getUserPublicId()));
 
-        // 2. Check if user is a defaulter
-        // 2. Check and validate if user is a defaulter
+        // 2. Check if user is a defaulter - block borrowing if flagged
         if (user.isDefaulter()) {
             // Self-healing: Verify if user should actually be a defaulter
             boolean isStillDefaulter = false;
